@@ -1,10 +1,9 @@
+version: '3.8'
 services:
-  mysql:
-    image: 'mysql:latest'
-    environment:
-      - 'MYSQL_DATABASE=mydatabase'
-      - 'MYSQL_PASSWORD=secret'
-      - 'MYSQL_ROOT_PASSWORD=verysecret'
-      - 'MYSQL_USER=myuser'
+  eventmanagement-frontend:
+    build: .
+    container_name: eventmanagement-frontend
     ports:
-      - '3306'
+      - "8282:8282"
+    depends_on:
+      - eventmanagement-kernel

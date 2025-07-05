@@ -1,0 +1,8 @@
+/* Grau für vergangene Events */
+.past { opacity: 0.5; }
+
+/* Farbkodierung nach EventType */
+.AFTERWORK   { background-color: #0d6efd; color: white; }
+.MEETUP      { background-color: #198754; color: white; }
+.CONFERENCE  { background-color: #fd7e14; color: white; }
+.FESTIVITY   { background-color: #dc3545; color: white; }
