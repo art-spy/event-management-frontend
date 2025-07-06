@@ -1,30 +1,30 @@
-$(function() {
+$(document).ready(function() {
     const api = {
         events: '/events',
         users:  '/users'
     };
 
-    // Datum/Uhrzeit formatieren: "DD.MM.YYYY HH:MM h"
+    // Hilfsfunktion zur Anzeige: "DD.MM.YYYY HH:MM h"
     function formatDateTime(str) {
         const d = new Date(str);
-        const dd = String(d.getDate()).padStart(2,'0');
-        const mm = String(d.getMonth()+1).padStart(2,'0');
-        const yyyy = d.getFullYear();
+        const DD = String(d.getDate()).padStart(2,'0');
+        const MM = String(d.getMonth()+1).padStart(2,'0');
+        const YYYY = d.getFullYear();
         const hh = String(d.getHours()).padStart(2,'0');
-        const mi = String(d.getMinutes()).padStart(2,'0');
-        return `${dd}.${mm}.${yyyy} ${hh}:${mi} h`;
+        const mm = String(d.getMinutes()).padStart(2,'0');
+        return `${DD}.${MM}.${YYYY} ${hh}:${mm} h`;
     }
 
-    // Events laden und anzeigen
+    // 1) Events laden und rendern
     function refreshEvents() {
-        $.get(api.events, events => {
+        $.get(api.events, function(events) {
             const $list = $('#event-list').empty();
             events.forEach(e => {
                 const names = e.participants
                     .map(u => u.firstName + ' ' + u.lastName)
                     .join(', ');
                 $list.append(`
-          <li class="list-group-item bg-transparent text-dark d-flex justify-content-between">
+          <li class="list-group-item d-flex justify-content-between text-dark">
             <div>
               <strong>${e.title}</strong> (${e.type})<br>
               ${formatDateTime(e.startDate)} – ${formatDateTime(e.endDate)}<br>
@@ -42,13 +42,13 @@ $(function() {
         });
     }
 
-    // Benutzer laden und anzeigen
+    // 2) Benutzer laden und rendern
     function refreshUsers() {
-        $.get(api.users, users => {
+        $.get(api.users, function(users) {
             const $list = $('#user-list').empty();
             users.forEach(u => {
                 $list.append(`
-          <li class="list-group-item bg-transparent text-dark d-flex justify-content-between">
+          <li class="list-group-item d-flex justify-content-between text-dark">
             <div>${u.firstName} ${u.lastName} (${u.email})</div>
             <div>
               <button class="btn btn-sm btn-outline-secondary me-1"
@@ -61,14 +61,15 @@ $(function() {
         });
     }
 
-    // Modales Formular für Benutzer
-    window.openUserModal = function(user) {
-        const isEdit = !!user;
-        const title  = isEdit ? 'Benutzer bearbeiten' : 'Neuen Benutzer erstellen';
-        const uid    = user?.id || '';
-        const email  = user?.email || '';
-        const fn     = user?.firstName || '';
-        const ln     = user?.lastName || '';
+    // 3) Modal für Nutzer anlegen/bearbeiten
+    function openUserModal(user) {
+        const isEdit = Boolean(user);
+        const title  = isEdit ? 'Benutzer bearbeiten' : 'Neuen Benutzer';
+        const id      = user?.id || '';
+        const email   = user?.email || '';
+        const firstName = user?.firstName || '';
+        const lastName  = user?.lastName || '';
+
         const html = `
       <div class="modal fade" id="userModal" tabindex="-1">
         <div class="modal-dialog">
@@ -78,7 +79,7 @@ $(function() {
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-              <input type="hidden" name="id" value="${uid}">
+              <input type="hidden" name="id" value="${id}">
               <div class="mb-3">
                 <label class="form-label">Email</label>
                 <input type="email" name="email" class="form-control"
@@ -87,12 +88,12 @@ $(function() {
               <div class="mb-3">
                 <label class="form-label">Vorname</label>
                 <input type="text" name="firstName" class="form-control"
-                       value="${fn}" required>
+                       value="${firstName}" required>
               </div>
               <div class="mb-3">
                 <label class="form-label">Nachname</label>
                 <input type="text" name="lastName" class="form-control"
-                       value="${ln}" required>
+                       value="${lastName}" required>
               </div>
             </div>
             <div class="modal-footer">
@@ -102,7 +103,9 @@ $(function() {
         </div>
       </div>`;
         $('#modal-container').html(html);
-        const modal = new bootstrap.Modal($('#userModal'));
+
+        const modalEl = document.getElementById('userModal');
+        const modal   = new bootstrap.Modal(modalEl);
         modal.show();
 
         $('#userForm').on('submit', function(e) {
@@ -115,6 +118,7 @@ $(function() {
             };
             const method = data.id ? 'PUT' : 'POST';
             const url    = api.users + (data.id ? '/' + data.id : '');
+
             $.ajax({
                 url, method, contentType: 'application/json',
                 data: JSON.stringify(data),
@@ -125,15 +129,16 @@ $(function() {
                 error: xhr => alert(xhr.responseText)
             });
         });
-    };
+    }
 
-    // Modales Formular für Events
-    window.openEventModal = function(ev) {
-        const isEdit = !!ev;
-        const title  = isEdit ? 'Event bearbeiten' : 'Neues Event erstellen';
-        const eid    = ev?.id || '';
-        const startVal = isEdit ? ev.startDate.substring(0,16) : '';
-        const endVal   = isEdit ? ev.endDate.substring(0,16)   : '';
+    // 4) Modal für Event anlegen/bearbeiten
+    function openEventModal(ev) {
+        const isEdit = Boolean(ev);
+        const title  = isEdit ? 'Event bearbeiten' : 'Neues Event';
+        const id     = ev?.id || '';
+        const start  = isEdit ? ev.startDate.substring(0,16) : '';
+        const end    = isEdit ? ev.endDate.substring(0,16)   : '';
+
         const html = `
       <div class="modal fade" id="eventModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -143,7 +148,7 @@ $(function() {
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body row">
-              <input type="hidden" name="id" value="${eid}">
+              <input type="hidden" name="id" value="${id}">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Titel</label>
                 <input type="text" name="title" class="form-control"
@@ -157,12 +162,12 @@ $(function() {
               <div class="col-md-6 mb-3">
                 <label class="form-label">Start</label>
                 <input type="datetime-local" name="startDate" class="form-control"
-                       value="${startVal}" required>
+                       value="${start}" required>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Ende</label>
                 <input type="datetime-local" name="endDate" class="form-control"
-                       value="${endVal}" required>
+                       value="${end}" required>
               </div>
               <div class="col-12 mb-3">
                 <label class="form-label">Beschreibung</label>
@@ -190,22 +195,22 @@ $(function() {
         </div>
       </div>`;
         $('#modal-container').html(html);
-        const modal = new bootstrap.Modal($('#eventModal'));
+
+        const modalEl = document.getElementById('eventModal');
+        const modal   = new bootstrap.Modal(modalEl);
         modal.show();
 
-        // Teilnehmer laden
-        $.get(api.users, users => {
+        // Teilnehmer laden und vorauswählen
+        $.get(api.users, function(users) {
+            const $sel = $('#eventModal select[name=participants]');
             users.forEach(u => {
-                $('#eventModal select[name=participants]').append(`
-          <option value="${u.id}">
-            ${u.firstName} ${u.lastName}
-          </option>`);
+                $sel.append(`<option value="${u.id}">
+                       ${u.firstName} ${u.lastName}
+                     </option>`);
             });
             if (isEdit) {
-                users.forEach(u => {
-                    if (ev.participants.find(p => p.id === u.id)) {
-                        $(`#eventModal option[value="${u.id}"]`).prop('selected', true);
-                    }
+                ev.participants.forEach(p => {
+                    $sel.find(`option[value="${p.id}"]`).prop('selected', true);
                 });
                 $('#eventModal select[name=type]').val(ev.type);
             }
@@ -213,6 +218,7 @@ $(function() {
 
         $('#eventForm').on('submit', function(e) {
             e.preventDefault();
+            const selected = $('#eventModal select[name=participants]').val() || [];
             const data = {
                 id:            $('input[name=id]').val() || null,
                 title:         $('input[name=title]').val(),
@@ -221,11 +227,11 @@ $(function() {
                 endDate:   $('input[name=endDate]').val(),
                 description:   $('textarea[name=description]').val(),
                 type:          $('select[name=type]').val(),
-                participants:  $('#eventModal select[name=participants]')
-                    .val().map(id => ({ id: Number(id) }))
+                participants:  selected.map(id => ({ id: Number(id) }))
             };
             const method = data.id ? 'PUT' : 'POST';
             const url    = api.events + (data.id ? '/' + data.id : '');
+
             $.ajax({
                 url, method, contentType: 'application/json',
                 data: JSON.stringify(data),
@@ -236,26 +242,37 @@ $(function() {
                 error: xhr => alert(xhr.responseText)
             });
         });
-    };
+    }
 
-    // CRUD-Hilfsfunktionen
-    window.editUser  = id => $.get(api.users + '/' + id, openUserModal);
-    window.deleteUser= id => {
+    // 5) CRUD-Funktionen global verfügbar machen
+    function editUser(id)   { $.get(api.users + '/' + id, openUserModal); }
+    function deleteUser(id) {
         if (confirm('Benutzer wirklich löschen?')) {
             $.ajax({ url: api.users + '/' + id, method: 'DELETE' })
                 .always(refreshUsers);
         }
-    };
-
-    window.editEvent   = id => $.get(api.events + '/' + id, openEventModal);
-    window.deleteEvent = id => {
+    }
+    function editEvent(id)   { $.get(api.events + '/' + id, openEventModal); }
+    function deleteEvent(id) {
         if (confirm('Event wirklich löschen?')) {
             $.ajax({ url: api.events + '/' + id, method: 'DELETE' })
                 .always(refreshEvents);
         }
-    };
+    }
+    window.editUser     = editUser;
+    window.deleteUser   = deleteUser;
+    window.editEvent    = editEvent;
+    window.deleteEvent  = deleteEvent;
 
-    // Initiales Laden
+    // 6) Klick-Handler für “Neu”-Buttons
+    $('#btn-add-user').on('click', function() {
+        openUserModal();
+    });
+    $('#btn-add-event').on('click', function() {
+        openEventModal();
+    });
+
+    // 7) Daten initial laden
     refreshEvents();
     refreshUsers();
 });
