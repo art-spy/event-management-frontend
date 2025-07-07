@@ -1,41 +1,65 @@
-$(document).ready(function() {
+$(document).ready(function () {
+
+    const AFTERWORK = 'Afterwork - internes Event';
+    const FESTIVITY = 'Fest - internes Event';
+    const MEETUP = 'MeetUp - externes Event';
+    const CONFERENCE = 'Konferenz - externes Event';
+
     const api = {
         events: '/events',
-        users:  '/users'
+        users: '/users'
     };
 
     // Hilfsfunktion zur Anzeige: "DD.MM.YYYY HH:MM h"
-    function formatDateTime(str) {
-        const d = new Date(str);
-        const DD = String(d.getDate()).padStart(2,'0');
-        const MM = String(d.getMonth()+1).padStart(2,'0');
-        const YYYY = d.getFullYear();
-        const hh = String(d.getHours()).padStart(2,'0');
-        const mm = String(d.getMinutes()).padStart(2,'0');
+    function formatDate(str) {
+        const date = new Date(str);
+        const DD = String(date.getDate()).padStart(2, '0');
+        const MM = String(date.getMonth() + 1).padStart(2, '0');
+        const YYYY = date.getFullYear();
+        const hh = String(date.getHours()).padStart(2, '0');
+        const mm = String(date.getMinutes()).padStart(2, '0');
         return `${DD}.${MM}.${YYYY} ${hh}:${mm} h`;
     }
 
+    function formatEventType(str) {
+        switch (str) {
+            case 'AFTERWORK':
+                return AFTERWORK;
+                break;
+            case 'FESTIVITY':
+                return FESTIVITY;
+                break;
+            case 'MEETUP':
+                return MEETUP;
+                break;
+            case 'CONFERENCE':
+                return CONFERENCE;
+                break;
+
+        }
+    }
+
     // 1) Events laden und rendern
-    function refreshEvents() {
-        $.get(api.events, function(events) {
-            const $list = $('#event-list').empty();
-            events.forEach(e => {
-                const names = e.participants
+    function loadEvents() {
+        $.get(api.events, function (events) {
+            const eventList = $('#event-list').empty();
+            events.forEach(event => {
+                const names = event.participants
                     .map(u => u.firstName + ' ' + u.lastName)
                     .join(', ');
-                $list.append(`
+                eventList.append(`
           <li class="list-group-item d-flex justify-content-between text-dark">
             <div>
-              <strong>${e.title}</strong> (${e.type})<br>
-              ${formatDateTime(e.startDate)} – ${formatDateTime(e.endDate)}<br>
-              Ort: ${e.location}<br>
+              <strong>${event.title}</strong> (${formatEventType(event.type)})<br>
+              ${formatDate(event.startDate)} – ${formatDate(event.endDate)}<br>
+              Ort: ${event.location}<br>
               Teilnehmer: ${names}
             </div>
             <div>
               <button class="btn btn-sm btn-outline-secondary me-1"
-                      onclick="editEvent(${e.id})">✎</button>
+                      onclick="editEvent(${event.id})">✎</button>
               <button class="btn btn-sm btn-outline-danger"
-                      onclick="deleteEvent(${e.id})">🗑</button>
+                      onclick="deleteEvent(${event.id})">🗑</button>
             </div>
           </li>`);
             });
@@ -43,18 +67,18 @@ $(document).ready(function() {
     }
 
     // 2) Benutzer laden und rendern
-    function refreshUsers() {
-        $.get(api.users, function(users) {
-            const $list = $('#user-list').empty();
-            users.forEach(u => {
-                $list.append(`
+    function loadUsers() {
+        $.get(api.users, function (users) {
+            const userList = $('#user-list').empty();
+            users.forEach(user => {
+                userList.append(`
           <li class="list-group-item d-flex justify-content-between text-dark">
-            <div>${u.firstName} ${u.lastName} (${u.email})</div>
+            <div>${user.firstName} ${user.lastName} (${user.email})</div>
             <div>
               <button class="btn btn-sm btn-outline-secondary me-1"
-                      onclick="editUser(${u.id})">✎</button>
+                      onclick="editUser(${user.id})">✎</button>
               <button class="btn btn-sm btn-outline-danger"
-                      onclick="deleteUser(${u.id})">🗑</button>
+                      onclick="deleteUser(${user.id})">🗑</button>
             </div>
           </li>`);
             });
@@ -62,13 +86,13 @@ $(document).ready(function() {
     }
 
     // 3) Modal für Nutzer anlegen/bearbeiten
-    function openUserModal(user) {
+    function openUserFormModal(user) {
         const isEdit = Boolean(user);
-        const title  = isEdit ? 'Benutzer bearbeiten' : 'Neuen Benutzer';
-        const id      = user?.id || '';
-        const email   = user?.email || '';
+        const title = isEdit ? 'Benutzer bearbeiten' : 'Neuen Benutzer';
+        const id = user?.id || '';
+        const email = user?.email || '';
         const firstName = user?.firstName || '';
-        const lastName  = user?.lastName || '';
+        const lastName = user?.lastName || '';
 
         const html = `
       <div class="modal fade" id="userModal" tabindex="-1">
@@ -104,27 +128,29 @@ $(document).ready(function() {
       </div>`;
         $('#modal-container').html(html);
 
-        const modalEl = document.getElementById('userModal');
-        const modal   = new bootstrap.Modal(modalEl);
+        const modalElement = document.getElementById('userModal');
+        const modal = new bootstrap.Modal(modalElement);
         modal.show();
 
-        $('#userForm').on('submit', function(e) {
-            e.preventDefault();
+        $('#userForm').on('submit', function (user) {
+            user.preventDefault();
             const data = {
-                id:        $('input[name=id]').val(),
-                email:     $('input[name=email]').val(),
+                id: $('input[name=id]').val(),
+                email: $('input[name=email]').val(),
                 firstName: $('input[name=firstName]').val(),
-                lastName:  $('input[name=lastName]').val()
+                lastName: $('input[name=lastName]').val()
             };
             const method = data.id ? 'PUT' : 'POST';
-            const url    = api.users + (data.id ? '/' + data.id : '');
+            const url = api.users + (data.id ? '/' + data.id : '');
 
             $.ajax({
-                url, method, contentType: 'application/json',
+                url,
+                method,
+                contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: () => {
                     modal.hide();
-                    refreshUsers();
+                    loadUsers();
                 },
                 error: xhr => alert(xhr.responseText)
             });
@@ -132,12 +158,12 @@ $(document).ready(function() {
     }
 
     // 4) Modal für Event anlegen/bearbeiten
-    function openEventModal(ev) {
-        const isEdit = Boolean(ev);
-        const title  = isEdit ? 'Event bearbeiten' : 'Neues Event';
-        const id     = ev?.id || '';
-        const start  = isEdit ? ev.startDate.substring(0,16) : '';
-        const end    = isEdit ? ev.endDate.substring(0,16)   : '';
+    function openEventModal(event) {
+        const isEdit = Boolean(event);
+        const title = isEdit ? 'Event bearbeiten' : 'Neues Event';
+        const id = event?.id || '';
+        const start = isEdit ? event.startDate.substring(0, 16) : '';
+        const end = isEdit ? event.endDate.substring(0, 16) : '';
 
         const html = `
       <div class="modal fade" id="eventModal" tabindex="-1">
@@ -152,12 +178,12 @@ $(document).ready(function() {
               <div class="col-md-6 mb-3">
                 <label class="form-label">Titel</label>
                 <input type="text" name="title" class="form-control"
-                       value="${ev?.title||''}" required>
+                       value="${event?.title || ''}" required>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Location</label>
                 <input type="text" name="location" class="form-control"
-                       value="${ev?.location||''}" required>
+                       value="${event?.location || ''}" required>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Start</label>
@@ -171,15 +197,15 @@ $(document).ready(function() {
               </div>
               <div class="col-12 mb-3">
                 <label class="form-label">Beschreibung</label>
-                <textarea name="description" class="form-control">${ev?.description||''}</textarea>
+                <textarea name="description" class="form-control">${event?.description || ''}</textarea>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Typ</label>
                 <select name="type" class="form-select" required>
-                  <option value="AFTERWORK">Afterwork</option>
-                  <option value="MEETUP">Meetup</option>
-                  <option value="CONFERENCE">Konferenz</option>
-                  <option value="FESTIVITY">Fest</option>
+                  <option value="AFTERWORK">${AFTERWORK}</option>
+                  <option value="MEETUP">${MEETUP}</option>
+                  <option value="CONFERENCE">${CONFERENCE}</option>
+                  <option value="FESTIVITY">${FESTIVITY}</option>
                 </select>
               </div>
               <div class="col-md-6 mb-3">
@@ -196,48 +222,49 @@ $(document).ready(function() {
       </div>`;
         $('#modal-container').html(html);
 
-        const modalEl = document.getElementById('eventModal');
-        const modal   = new bootstrap.Modal(modalEl);
+        const modalElement = document.getElementById('eventModal');
+        const modal = new bootstrap.Modal(modalElement);
         modal.show();
 
         // Teilnehmer laden und vorauswählen
-        $.get(api.users, function(users) {
-            const $sel = $('#eventModal select[name=participants]');
-            users.forEach(u => {
-                $sel.append(`<option value="${u.id}">
-                       ${u.firstName} ${u.lastName}
+        $.get(api.users, function (users) {
+            const select = $('#eventModal select[name=participants]');
+            users.forEach(user => {
+                select.append(`<option value="${user.id}">
+                       ${user.firstName} ${user.lastName}
                      </option>`);
             });
             if (isEdit) {
-                ev.participants.forEach(p => {
-                    $sel.find(`option[value="${p.id}"]`).prop('selected', true);
+                event.participants.forEach(participant => {
+                    select.find(`option[value="${participant.id}"]`).prop('selected', true);
                 });
-                $('#eventModal select[name=type]').val(ev.type);
+                $('#eventModal select[name=type]').val(event.type);
             }
         });
 
-        $('#eventForm').on('submit', function(e) {
-            e.preventDefault();
+        $('#eventForm').on('submit', function (event) {
+            event.preventDefault();
             const selected = $('#eventModal select[name=participants]').val() || [];
             const data = {
-                id:            $('input[name=id]').val() || null,
-                title:         $('input[name=title]').val(),
-                location:      $('input[name=location]').val(),
+                id: $('input[name=id]').val() || null,
+                title: $('input[name=title]').val(),
+                location: $('input[name=location]').val(),
                 startDate: $('input[name=startDate]').val(),
-                endDate:   $('input[name=endDate]').val(),
-                description:   $('textarea[name=description]').val(),
-                type:          $('select[name=type]').val(),
-                participants:  selected.map(id => ({ id: Number(id) }))
+                endDate: $('input[name=endDate]').val(),
+                description: $('textarea[name=description]').val(),
+                type: $('select[name=type]').val(),
+                participants: selected.map(id => ({id: Number(id)}))
             };
             const method = data.id ? 'PUT' : 'POST';
-            const url    = api.events + (data.id ? '/' + data.id : '');
+            const url = api.events + (data.id ? '/' + data.id : '');
 
             $.ajax({
-                url, method, contentType: 'application/json',
+                url, method,
+                contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: () => {
                     modal.hide();
-                    refreshEvents();
+                    loadEvents();
                 },
                 error: xhr => alert(xhr.responseText)
             });
@@ -245,34 +272,42 @@ $(document).ready(function() {
     }
 
     // 5) CRUD-Funktionen global verfügbar machen
-    function editUser(id)   { $.get(api.users + '/' + id, openUserModal); }
+    function editUser(id) {
+        $.get(api.users + '/' + id, openUserFormModal);
+    }
+
     function deleteUser(id) {
         if (confirm('Benutzer wirklich löschen?')) {
-            $.ajax({ url: api.users + '/' + id, method: 'DELETE' })
-                .always(refreshUsers);
+            $.ajax({url: api.users + '/' + id, method: 'DELETE'})
+                .always(loadUsers);
         }
     }
-    function editEvent(id)   { $.get(api.events + '/' + id, openEventModal); }
+
+    function editEvent(id) {
+        $.get(api.events + '/' + id, openEventModal);
+    }
+
     function deleteEvent(id) {
         if (confirm('Event wirklich löschen?')) {
-            $.ajax({ url: api.events + '/' + id, method: 'DELETE' })
-                .always(refreshEvents);
+            $.ajax({url: api.events + '/' + id, method: 'DELETE'})
+                .always(loadEvents);
         }
     }
-    window.editUser     = editUser;
-    window.deleteUser   = deleteUser;
-    window.editEvent    = editEvent;
-    window.deleteEvent  = deleteEvent;
+
+    window.editUser = editUser;
+    window.deleteUser = deleteUser;
+    window.editEvent = editEvent;
+    window.deleteEvent = deleteEvent;
 
     // 6) Klick-Handler für “Neu”-Buttons
-    $('#btn-add-user').on('click', function() {
-        openUserModal();
+    $('#btn-add-user').on('click', function () {
+        openUserFormModal();
     });
-    $('#btn-add-event').on('click', function() {
+    $('#btn-add-event').on('click', function () {
         openEventModal();
     });
 
     // 7) Daten initial laden
-    refreshEvents();
-    refreshUsers();
+    loadEvents();
+    loadUsers();
 });
