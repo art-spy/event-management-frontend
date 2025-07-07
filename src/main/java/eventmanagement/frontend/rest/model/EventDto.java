@@ -12,7 +12,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventDto {
+public class EventDto extends ResponseDto {
 
     private Long id;
     private String title;

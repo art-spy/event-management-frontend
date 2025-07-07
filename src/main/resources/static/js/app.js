@@ -39,6 +39,30 @@ $(document).ready(function () {
         }
     }
 
+    function executeAjaxRequest(url, method, data, modal){
+        $.ajax({
+            url,
+            method,
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: () => {
+                modal.hide();
+                loadUsers();
+            },
+            error: (jQueryRequest) => {
+                const errorMessage = jQueryRequest.responseJSON?.message?.errorMessage
+                    || 'Ein unbekannter Fehler ist aufgetreten';
+                const errorType = jQueryRequest.responseJSON?.message?.errorType;
+
+                if (errorType) {
+                    alert(`ErrorType: ${errorType}`);
+                } else {
+                    alert(errorMessage);
+                }
+            }
+        });
+    }
+
     // 1) Events laden und rendern
     function loadEvents() {
         $.get(api.events, function (events) {
@@ -143,17 +167,7 @@ $(document).ready(function () {
             const method = data.id ? 'PUT' : 'POST';
             const url = api.users + (data.id ? '/' + data.id : '');
 
-            $.ajax({
-                url,
-                method,
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: () => {
-                    modal.hide();
-                    loadUsers();
-                },
-                error: xhr => alert(xhr.responseText)
-            });
+            executeAjaxRequest(url, method, data, modal);
         });
     }
 
@@ -258,16 +272,7 @@ $(document).ready(function () {
             const method = data.id ? 'PUT' : 'POST';
             const url = api.events + (data.id ? '/' + data.id : '');
 
-            $.ajax({
-                url, method,
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: () => {
-                    modal.hide();
-                    loadEvents();
-                },
-                error: xhr => alert(xhr.responseText)
-            });
+            executeAjaxRequest(url, method, data, modal);
         });
     }
 
