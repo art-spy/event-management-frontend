@@ -1,9 +1,0 @@
-version: '3.8'
-services:
-  eventmanagement-frontend:
-    build: .
-    container_name: eventmanagement-frontend
-    ports:
-      - "8282:8282"
-    depends_on:
-      - eventmanagement-kernel

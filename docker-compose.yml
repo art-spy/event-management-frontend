@@ -1,0 +1,26 @@
+# docker-compose.yml
+version: '3.8'
+services:
+  event-management-frontend:
+    build: .
+    container_name: event-management-frontend
+    ports:
+      - "8282:8282"
+    environment:
+      - KERNEL_URL=http://event-management-kernel:8181
+    networks:
+      - event-management-network
+    depends_on:
+      - event-management-kernel
+
+  event-management-kernel:
+    image: event-management-kernel:latest
+    container_name: event-management-kernel
+    ports:
+      - "8181:8181"
+    networks:
+      - event-management-network
+
+networks:
+  event-management-network:
+    name: event-management-network
