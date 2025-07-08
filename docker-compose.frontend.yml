@@ -1,0 +1,19 @@
+
+version: '3.8'
+
+networks:
+  event-management-network:
+    driver: bridge
+
+services:
+  event-management-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: event-management-frontend
+    ports:
+      - "8282:8282"
+    environment:
+      - KERNEL_URL=http://host.docker.internal:8181
+    networks:
+      - event-management-network
