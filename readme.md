@@ -1,6 +1,15 @@
-# Getting Started
+# Event Management Frontend
 
-### Reference Documentation
+### Start Docker Images
+Compose Frontend container:</br>
+docker-compose -f docker-compose.frontend.yml up -d
+
+### Frontend URL:
+http://localhost:8282/
+
+# Further Documentation
+
+### Reference
 
 For further reference, please consider the following sections:
 

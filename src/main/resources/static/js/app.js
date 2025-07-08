@@ -9,7 +9,7 @@ const EVENT_TYPE_MEETUP = 'MeetUp - externes Event';
 const EVENT_TYPE_CONFERENCE = 'Konferenz - externes Event';
 
 // Messages
-const MSG_DELETE_CONFIRM = 'Wirklich löschen?';
+const MSG_DELETE_CONFIRM = 'Soll der Eintrag wirklich gelöscht werden?';
 const MSG_DEFAULT_ERROR = 'Ein unbekannter Fehler ist aufgetreten';
 
 // Error messages
