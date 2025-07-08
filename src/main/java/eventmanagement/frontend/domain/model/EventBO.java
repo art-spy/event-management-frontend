@@ -1,6 +1,6 @@
 package eventmanagement.frontend.domain.model;
 
-import eventmanagement.frontend.rest.model.EventType;
+import eventmanagement.kernel.api.model.EventType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

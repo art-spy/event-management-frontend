@@ -2,7 +2,7 @@ package eventmanagement.frontend.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eventmanagement.frontend.rest.model.EventDto;
+import eventmanagement.kernel.api.model.EventDto;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

@@ -40,6 +40,7 @@ const ERR_MSG_DATE_OVERLAPPING_EVENT = 'Benutzer {0} hat ein zeitlich überlappe
 const ERR_MSG_USER_NOT_FOUND = 'Der Benutzer wurde nicht gefunden.';
 const ERR_MSG_EVENT_NOT_FOUND = 'Das Event wurde nicht gefunden.';
 const ERR_MSG_USER_ALREADY_EXISTS = 'Ein Benutzer mit der E-Mail Adresse existiert bereits.';
+const ERR_MSG_USER_IN_EVENT = 'Der Benutzer ist noch mindestens einem Event zugeordnet.';
 const ERR_MSG_START_DATE_AFTER_END_DATE = 'Das Startdatum muss vor dem Enddatum liegen.';
 const ERR_MSG_EVENT_DURATION_EXCEEDED = 'Das Event hat die Höchstdauer von 24 Stunden überschritten.';
 const ERR_MSG_VALIDATION_ERROR = 'Validierung fehlgeschlagen.';

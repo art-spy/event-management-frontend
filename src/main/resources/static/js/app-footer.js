@@ -38,6 +38,7 @@ function handleErrorType(errorType, user, event) {
         case 'USER_NOT_FOUND': return ERR_MSG_USER_NOT_FOUND;
         case 'EVENT_NOT_FOUND': return ERR_MSG_EVENT_NOT_FOUND;
         case 'USER_ALREADY_EXISTS': return ERR_MSG_USER_ALREADY_EXISTS;
+        case 'USER_IN_EVENT': return ERR_MSG_USER_IN_EVENT;
         case 'START_DATE_AFTER_END_DATE': return ERR_MSG_START_DATE_AFTER_END_DATE;
         case 'EVENT_DURATION_EXCEEDED': return ERR_MSG_EVENT_DURATION_EXCEEDED;
         case 'VALIDATION_ERROR': return ERR_MSG_VALIDATION_ERROR;
