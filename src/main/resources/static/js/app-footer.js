@@ -1,27 +1,3 @@
-// API endpoints
-const API_EVENTS = '/events';
-const API_USERS = '/users';
-
-// Event types
-const EVENT_TYPE_AFTERWORK = 'Afterwork - internes Event';
-const EVENT_TYPE_FESTIVITY = 'Fest - internes Event';
-const EVENT_TYPE_MEETUP = 'MeetUp - externes Event';
-const EVENT_TYPE_CONFERENCE = 'Konferenz - externes Event';
-
-// Messages
-const MSG_DELETE_CONFIRM = 'Soll der Eintrag wirklich gelöscht werden?';
-const MSG_DEFAULT_ERROR = 'Ein unbekannter Fehler ist aufgetreten';
-
-// Error messages
-const ERR_MSG_DATE_OVERLAPPING_USER = 'Benutzer {0} hat ein zeitlich überlappendes Event.';
-const ERR_MSG_DATE_OVERLAPPING_EVENT = 'Benutzer {0} hat ein zeitlich überlappendes Event.';
-const ERR_MSG_USER_NOT_FOUND = 'Der Benutzer wurde nicht gefunden.';
-const ERR_MSG_EVENT_NOT_FOUND = 'Das Event wurde nicht gefunden.';
-const ERR_MSG_USER_ALREADY_EXISTS = 'Ein Benutzer mit der E-Mail Adresse existiert bereits.';
-const ERR_MSG_START_DATE_AFTER_END_DATE = 'Das Startdatum muss vor dem Enddatum liegen.';
-const ERR_MSG_EVENT_DURATION_EXCEEDED = 'Das Event hat die Höchstdauer von 24 Stunden überschritten.';
-const ERR_MSG_VALIDATION_ERROR = 'Validierung fehlgeschlagen.';
-
 // Format date string to "DD.MM.YYYY HH:MM h"
 function formatDate(str) {
     const date = new Date(str);
@@ -82,14 +58,14 @@ function executeRequest(url, method, data, onSuccess) {
 }
 
 // Handle delete operations
-function handleDelete(endpoint, id, onSuccess) {
+function handleDeleteEntity(endpoint, id, onSuccess) {
     if (confirm(MSG_DELETE_CONFIRM)) {
         executeRequest(`${endpoint}/${id}`, 'DELETE', null, onSuccess);
     }
 }
 
 // Handle save operations
-function handleSave(endpoint, data, modal, onSuccess) {
+function handleSaveEntity(endpoint, data, modal, onSuccess) {
     const method = data.id ? 'PUT' : 'POST';
     const url = data.id ? `${endpoint}/${data.id}` : endpoint;
     executeRequest(url, method, data, () => {
@@ -105,7 +81,7 @@ function renderUserList(users) {
         userList.append(`
             <li class="list-group-item d-flex justify-content-between text-dark">
                 <div>${user.firstName} ${user.lastName} (${user.email})</div>
-                <div>
+                <div class="evnt-mngmnt-col-lg-btn">
                     <button class="btn btn-sm btn-outline-secondary me-1" onclick="editUser(${user.id})">✎</button>
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">🗑</button>
                 </div>
@@ -128,7 +104,7 @@ function renderEventList(events) {
                     Ort: ${event.location}<br>
                     Teilnehmer: ${names}
                 </div>
-                <div class="col-lg-btn">
+                <div class="evnt-mngmnt-col-lg-btn">
                     <button class="btn btn-sm btn-outline-secondary me-1" onclick="editEvent(${event.id})">✎</button>
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteEvent(${event.id})">🗑</button>
                 </div>
@@ -136,13 +112,13 @@ function renderEventList(events) {
     });
 }
 
-// Load users from API
-function loadUsers() {
+// Retrieve all users
+function retrieveAllUsers() {
     executeRequest(API_USERS, 'GET', null, renderUserList);
 }
 
-// Load events from API
-function loadEvents() {
+// Retrieve all events
+function retrieveAllEvents() {
     executeRequest(API_EVENTS, 'GET', null, renderEventList);
 }
 
@@ -154,26 +130,26 @@ function openUserFormModal(user) {
             <div class="modal-dialog">
                 <form id="userForm" class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">${isEdit ? 'Benutzer bearbeiten' : 'Neuer Benutzer'}</h5>
+                        <h5 class="modal-title">${isEdit ? UI_BUTTON_EDIT_USER : UI_BUTTON_NEW_USER}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="id" value="${user?.id || ''}">
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
+                            <label class="form-label">${UI_FORM_EMAIL}</label>
                             <input type="email" name="email" class="form-control" value="${user?.email || ''}" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Vorname</label>
+                            <label class="form-label">${UI_FORM_FIRST_NAME}</label>
                             <input type="text" name="firstName" class="form-control" value="${user?.firstName || ''}" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Nachname</label>
+                            <label class="form-label">${UI_FORM_LAST_NAME}</label>
                             <input type="text" name="lastName" class="form-control" value="${user?.lastName || ''}" required>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Speichern</button>
+                        <button type="submit" class="btn btn-primary">${UI_FORM_SAVE}</button>
                     </div>
                 </form>
             </div>
@@ -187,7 +163,7 @@ function openUserFormModal(user) {
             firstName: $('input[name=firstName]').val(),
             lastName: $('input[name=lastName]').val()
         };
-        handleSave(API_USERS, formData, modal, loadUsers);
+        handleSaveEntity(API_USERS, formData, modal, retrieveAllUsers);
     });
 
     modal.show();
@@ -201,35 +177,35 @@ function openEventFormModal(event) {
             <div class="modal-dialog modal-lg">
                 <form id="eventForm" class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">${isEdit ? 'Event bearbeiten' : 'Neues Event'}</h5>
+                        <h5 class="modal-title">${isEdit ? UI_BUTTON_EDIT_EVENT : UI_BUTTON_NEW_EVENT}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body row">
                         <input type="hidden" name="id" value="${event?.id || ''}">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Titel</label>
+                            <label class="form-label">${UI_FORM_TITLE}</label>
                             <input type="text" name="title" class="form-control" value="${event?.title || ''}" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Location</label>
+                            <label class="form-label">${UI_FORM_LOCATION}</label>
                             <input type="text" name="location" class="form-control" value="${event?.location || ''}" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Start</label>
+                            <label class="form-label">${UI_FORM_START}</label>
                             <input type="datetime-local" name="startDate" class="form-control" 
                                    value="${event?.startDate?.substring(0, 16) || ''}" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Ende</label>
+                            <label class="form-label">${UI_FORM_END}</label>
                             <input type="datetime-local" name="endDate" class="form-control" 
                                    value="${event?.endDate?.substring(0, 16) || ''}" required>
                         </div>
                         <div class="col-12 mb-3">
-                            <label class="form-label">Beschreibung</label>
+                            <label class="form-label">${UI_FORM_DESCRIPTION}</label>
                             <textarea name="description" class="form-control">${event?.description || ''}</textarea>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Typ</label>
+                            <label class="form-label">${UI_FORM_TYPE}</label>
                             <select name="type" class="form-select" required>
                                 <option value="AFTERWORK">${EVENT_TYPE_AFTERWORK}</option>
                                 <option value="MEETUP">${EVENT_TYPE_MEETUP}</option>
@@ -238,12 +214,12 @@ function openEventFormModal(event) {
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Teilnehmer</label>
+                            <label class="form-label">${UI_FORM_PARTICIPANTS}</label>
                             <select name="participants" multiple class="form-select" required></select>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Speichern</button>
+                        <button type="submit" class="btn btn-primary">${UI_FORM_SAVE}</button>
                     </div>
                 </form>
             </div>
@@ -276,7 +252,7 @@ function openEventFormModal(event) {
             type: $('select[name=type]').val(),
             participants: selected.map(id => ({id: Number(id)}))
         };
-        handleSave(API_EVENTS, formData, modal, loadEvents);
+        handleSaveEntity(API_EVENTS, formData, modal, retrieveAllEvents);
     });
 
     modal.show();
@@ -288,7 +264,7 @@ function editUser(id) {
 }
 
 function deleteUser(id) {
-    handleDelete(API_USERS, id, loadUsers);
+    handleDeleteEntity(API_USERS, id, retrieveAllUsers);
 }
 
 function editEvent(id) {
@@ -296,7 +272,7 @@ function editEvent(id) {
 }
 
 function deleteEvent(id) {
-    handleDelete(API_EVENTS, id, loadEvents);
+    handleDeleteEntity(API_EVENTS, id, retrieveAllEvents);
 }
 
 // Document ready handler
@@ -312,6 +288,6 @@ $(document).ready(function() {
     $('#btn-add-event').on('click', () => openEventFormModal());
 
     // Initial data load
-    loadEvents();
-    loadUsers();
+    retrieveAllEvents();
+    retrieveAllUsers();
 });

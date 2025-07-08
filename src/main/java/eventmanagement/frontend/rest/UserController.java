@@ -3,6 +3,8 @@ package eventmanagement.frontend.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eventmanagement.frontend.rest.model.UserDto;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -25,19 +27,24 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final RestTemplate restTemplate;
-    private final String kernelBase;
 
-    public UserController(RestTemplate restTemplate,
-                          @Value("${kernel.url}") String kernelUrl) {
-        this.restTemplate = restTemplate;
-        this.kernelBase = kernelUrl + "/api/users";
+    @Value("${kernel.url}")
+    private String kernelUrl;
+
+    @PostConstruct
+    private void init() {
+        kernelBase = kernelUrl + "/api/users";
     }
 
+    private String kernelBase;
+
+
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAll() {
+    public ResponseEntity<List<UserDto>> getAllUsers() {
         ResponseEntity<List<UserDto>> resp = restTemplate.exchange(
                 kernelBase, HttpMethod.GET, null,
                 new ParameterizedTypeReference<>() {});
@@ -45,7 +52,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getById(@PathVariable Long id) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         try {
             UserDto dto = restTemplate.getForObject(kernelBase + "/" + id, UserDto.class);
             return ResponseEntity.ok(dto);
@@ -55,7 +62,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDto> create(@RequestBody UserDto dto) {
+    public ResponseEntity<UserDto> createUser(@RequestBody UserDto dto) {
         try {
             UserDto created = restTemplate.postForObject(kernelBase, dto, UserDto.class);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -66,8 +73,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDto> update(@PathVariable Long id,
-                                          @RequestBody UserDto dto) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id,
+                                              @RequestBody UserDto dto) {
         try {
             HttpEntity<UserDto> entity = new HttpEntity<>(dto);
             ResponseEntity<UserDto> resp = restTemplate.exchange(
@@ -79,7 +86,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<UserDto> delete(@PathVariable Long id) {
+    public ResponseEntity<UserDto> deleteUser(@PathVariable Long id) {
         try {
             restTemplate.delete(kernelBase + "/" + id);
             return ResponseEntity.noContent().build();
